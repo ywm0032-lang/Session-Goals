@@ -324,11 +324,8 @@ protected:
         auto ids = getGoalIds();
 
         if (ids.empty()) {
-            auto emptyLabel = CCLabelBMFont::create(
-                "No goals yet.
-Tap + to add one.",
-                "bigFont.fnt"
-            );
+            auto emptyLabel = CCLabelBMFont::create("No goals yet.
+Tap + to add one.", "bigFont.fnt");
 
             if (emptyLabel) {
                 emptyLabel->setScale(0.45f);
@@ -362,13 +359,8 @@ Tap + to add one.",
                 ? "Completed"
                 : "Best: " + std::to_string(best) + "%";
 
-            std::string text = fmt::format(
-                "Level {}
-Goal: {}%  {}",
-                id,
-                target,
-                status
-            );
+            std::string text = fmt::format("Level {}
+Goal: {}%  {}", id, target, status);
 
             auto label = CCLabelBMFont::create(text.c_str(), "bigFont.fnt");
 
