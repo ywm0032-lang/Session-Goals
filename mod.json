@@ -11,5 +11,6 @@
     "developer": "ywm03mainacc",
     "description": "Set a percentage goal and track your best percentage and attempts.",
     "repository": "https://github.com/ywm03mainacc/Session-Goals",
-    "tags": ["utility", "hud", "practice"]
+    "tags": ["utility", "hud", "practice"],
+    "dependencies": {}
 }
