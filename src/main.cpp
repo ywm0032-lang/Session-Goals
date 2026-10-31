@@ -6,7 +6,7 @@
 
 using namespace geode::prelude;
 
-class GoalPopup : public FLAlertLayer {
+class GoalPopup : public FLAlertLayer, public FLAlertLayerProtocol {
 protected:
     TextInput* m_levelIdInput;
     TextInput* m_goalInput;
