@@ -1,0 +1,16 @@
+{
+    "geode": "5.6.0",
+    "gd": {
+        "android": "2.2081",
+        "win": "2.2081",
+        "mac": "2.2081"
+    },
+    "id": "yourname.session-goals",
+    "name": "Session Goals",
+    "version": "v1.0.0",
+    "developer": "YourName",
+    "description": "Set percentage goals for levels and track your progress live.",
+    "repository": "https://github.com/yourname/SessionGoals",
+    "tags": ["utility", "hud", "practice"],
+    "dependencies": []
+}
