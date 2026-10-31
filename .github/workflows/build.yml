@@ -1,0 +1,33 @@
+name: Build Session Goals
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        target:
+          - Android64
+          - Win64
+
+    runs-on: ${{ matrix.target == 'Android64' && 'ubuntu-latest' || 'windows-latest' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Geode Mod
+        uses: geode-sdk/build-geode-mod@main
+        with:
+          target: ${{ matrix.target }}
+          sdk: given
+          cli: latest
+          build-config: Release
+          path: ./
+          combine: false
+          bindings: geode-sdk/bindings
+          android-min-sdk: 23
