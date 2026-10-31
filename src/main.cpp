@@ -3,18 +3,271 @@
 #include <Geode/modify/PauseLayer.hpp>
 #include <Geode/ui/TextInput.hpp>
 #include <Geode/ui/Notification.hpp>
+#include <Geode/ui/ScrollLayer.hpp>
 
 using namespace geode::prelude;
 
-class GoalPopup : public FLAlertLayer, public FLAlertLayerProtocol {
+class AddGoalPopup;
+
+class GoalListPopup : public FLAlertLayer, public FLAlertLayerProtocol {
 protected:
-    TextInput* m_levelIdInput = nullptr;
-    TextInput* m_goalInput = nullptr;
+    ScrollLayer* m_scrollLayer = nullptr;
+    CCLabelBMFont* m_emptyLabel = nullptr;
 
     bool init() {
         if (!FLAlertLayer::init(
             this,
-            "Set Goal",
+            "",
+            "",
+            "Close",
+            "",
+            340.f,
+            false,
+            260.f,
+            1.f
+        )) {
+            return false;
+        }
+
+        if (!m_mainLayer || !m_buttonMenu) {
+            return false;
+        }
+
+        this->setBrownBackground();
+
+        float centerX = 170.f;
+
+        auto titleLabel = CCLabelBMFont::create("Session Goals", "bigFont.fnt");
+        if (titleLabel) {
+            titleLabel->setScale(0.65f);
+            titleLabel->setPosition({centerX, 225.f});
+            m_mainLayer->addChild(titleLabel);
+        }
+
+        m_scrollLayer = ScrollLayer::create({280.f, 150.f});
+
+        if (m_scrollLayer) {
+            m_scrollLayer->setPosition({30.f, 45.f});
+            m_mainLayer->addChild(m_scrollLayer);
+        }
+
+        this->createPlusButton();
+        this->reloadGoals();
+
+        return true;
+    }
+
+    void setBrownBackground() {
+        auto oldBackground = m_mainLayer->getChildByType<CCScale9Sprite>(0);
+
+        auto brownBackground = CCScale9Sprite::create("GJ_square04.png");
+
+        if (!brownBackground) {
+            return;
+        }
+
+        brownBackground->setContentSize({320.f, 240.f});
+        brownBackground->setPosition({170.f, 130.f});
+        brownBackground->setZOrder(-1);
+
+        m_mainLayer->addChild(brownBackground);
+
+        if (oldBackground) {
+            oldBackground->removeFromParent();
+        }
+    }
+
+    void createPlusButton() {
+        auto plusSprite = CCSprite::createWithSpriteFrameName("GJ_plusBtn_001.png");
+
+        if (!plusSprite) {
+            return;
+        }
+
+        auto plusButton = CCMenuItemSpriteExtra::create(
+            plusSprite,
+            this,
+            menu_selector(GoalListPopup::onAddGoal)
+        );
+
+        if (!plusButton) {
+            return;
+        }
+
+        plusButton->setPosition({295.f, 225.f});
+        plusButton->setScale(0.9f);
+
+        auto menu = CCMenu::create();
+
+        if (!menu) {
+            return;
+        }
+
+        menu->addChild(plusButton);
+        menu->setPosition({0.f, 0.f});
+        m_buttonMenu->addChild(menu);
+    }
+
+    std::vector<std::string> getGoalIds() {
+        std::vector<std::string> ids;
+
+        std::string saved = Mod::get()->getSavedValue<std::string>("goal-ids", "");
+
+        if (saved.empty()) {
+            return ids;
+        }
+
+        std::string current;
+
+        for (char character : saved) {
+            if (character == ',') {
+                if (!current.empty()) {
+                    ids.push_back(current);
+                }
+                current.clear();
+            } else {
+                current += character;
+            }
+        }
+
+        if (!current.empty()) {
+            ids.push_back(current);
+        }
+
+        return ids;
+    }
+
+    bool hasGoalId(std::vector<std::string> const& ids, std::string const& id) {
+        for (auto const& existingId : ids) {
+            if (existingId == id) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    void saveGoalIds(std::vector<std::string> const& ids) {
+        std::string saved;
+
+        for (size_t i = 0; i < ids.size(); i++) {
+            if (i > 0) {
+                saved += ",";
+            }
+
+            saved += ids[i];
+        }
+
+        Mod::get()->setSavedValue("goal-ids", saved);
+    }
+
+    void reloadGoals() {
+        if (!m_scrollLayer || !m_scrollLayer->m_contentLayer) {
+            return;
+        }
+
+        m_scrollLayer->m_contentLayer->removeAllChildren();
+
+        auto ids = this->getGoalIds();
+
+        if (ids.empty()) {
+            m_emptyLabel = CCLabelBMFont::create(
+                "No goals yet.
+Tap + to add one.",
+                "bigFont.fnt"
+            );
+
+            if (m_emptyLabel) {
+                m_emptyLabel->setScale(0.45f);
+                m_emptyLabel->setPosition({140.f, 75.f});
+                m_scrollLayer->m_contentLayer->addChild(m_emptyLabel);
+            }
+
+            m_scrollLayer->m_contentLayer->setContentHeight(150.f);
+            return;
+        }
+
+        float y = 25.f;
+
+        for (auto const& id : ids) {
+            int target = Mod::get()->getSavedValue<int>(
+                "goal_" + id + "_target",
+                100
+            );
+
+            int best = Mod::get()->getSavedValue<int>(
+                "goal_" + id + "_best",
+                0
+            );
+
+            bool completed = Mod::get()->getSavedValue<bool>(
+                "goal_" + id + "_completed",
+                false
+            );
+
+            std::string status = completed
+                ? "Completed"
+                : "Best: " + std::to_string(best) + "%";
+
+            std::string text = fmt::format(
+                "Level {}
+Goal: {}%  {}",
+                id,
+                target,
+                status
+            );
+
+            auto label = CCLabelBMFont::create(text.c_str(), "bigFont.fnt");
+
+            if (label) {
+                label->setScale(0.4f);
+                label->setPosition({140.f, y});
+                m_scrollLayer->m_contentLayer->addChild(label);
+            }
+
+            y += 50.f;
+        }
+
+        m_scrollLayer->m_contentLayer->setContentHeight(y);
+    }
+
+    void onAddGoal(CCObject*) {
+        AddGoalPopup::create(this)->show();
+    }
+
+public:
+    static GoalListPopup* create() {
+        auto result = new GoalListPopup();
+
+        if (result && result->init()) {
+            result->autorelease();
+            return result;
+        }
+
+        if (result) {
+            delete result;
+        }
+
+        return nullptr;
+    }
+
+    void refreshGoals() {
+        this->reloadGoals();
+    }
+};
+
+class AddGoalPopup : public FLAlertLayer, public FLAlertLayerProtocol {
+protected:
+    GoalListPopup* m_listPopup = nullptr;
+    TextInput* m_levelIdInput = nullptr;
+    TextInput* m_goalInput = nullptr;
+
+    AddGoalPopup(GoalListPopup* listPopup) : m_listPopup(listPopup) {}
+
+    bool init() {
+        if (!FLAlertLayer::init(
+            this,
+            "",
             "",
             "Cancel",
             "",
@@ -34,6 +287,13 @@ protected:
 
         float centerX = 170.f;
         float centerY = 125.f;
+
+        auto titleLabel = CCLabelBMFont::create("Add Goal", "bigFont.fnt");
+        if (titleLabel) {
+            titleLabel->setScale(0.65f);
+            titleLabel->setPosition({centerX, 225.f});
+            m_mainLayer->addChild(titleLabel);
+        }
 
         auto levelLabel = CCLabelBMFont::create("Level ID", "bigFont.fnt");
         if (levelLabel) {
@@ -64,13 +324,14 @@ protected:
         auto saveButton = CCMenuItemSpriteExtra::create(
             ButtonSprite::create("Save"),
             this,
-            menu_selector(GoalPopup::onSave)
+            menu_selector(AddGoalPopup::onSave)
         );
 
         if (saveButton) {
             saveButton->setPosition({centerX, centerY - 95.f});
 
             auto menu = CCMenu::create();
+
             if (menu) {
                 menu->addChild(saveButton);
                 menu->setPosition({0.f, 0.f});
@@ -102,7 +363,7 @@ protected:
     }
 
     void onSave(CCObject*) {
-        if (!m_levelIdInput || !m_goalInput) {
+        if (!m_levelIdInput || !m_goalInput || !m_listPopup) {
             return;
         }
 
@@ -129,22 +390,31 @@ protected:
             return;
         }
 
-        Mod::get()->setSavedValue("goal-level", levelId);
-        Mod::get()->setSavedValue("goal-percent", goal);
-        Mod::get()->setSavedValue("goal-attempts", 0);
+        auto ids = m_listPopup->getGoalIds();
+
+        if (!m_listPopup->hasGoalId(ids, levelId)) {
+            ids.push_back(levelId);
+            m_listPopup->saveGoalIds(ids);
+        }
+
+        Mod::get()->setSavedValue("goal_" + levelId + "_target", goal);
+        Mod::get()->setSavedValue("goal_" + levelId + "_best", 0);
+        Mod::get()->setSavedValue("goal_" + levelId + "_completed", false);
 
         Notification::create(
-            "Goal saved.",
+            "Goal added.",
             NotificationIcon::Success,
             2.f
         )->show();
+
+        m_listPopup->refreshGoals();
 
         this->onBtn1(nullptr);
     }
 
 public:
-    static GoalPopup* create() {
-        auto result = new GoalPopup();
+    static AddGoalPopup* create(GoalListPopup* listPopup) {
+        auto result = new AddGoalPopup(listPopup);
 
         if (result && result->init()) {
             result->autorelease();
@@ -168,20 +438,45 @@ public:
     void destroyPlayer(PlayerObject* player, GameObject* object) {
         PlayLayer::destroyPlayer(player, object);
 
-        int attempts = Mod::get()->getSavedValue<int>("goal-attempts", 0);
-        Mod::get()->setSavedValue("goal-attempts", attempts + 1);
+        if (!m_level) {
+            return;
+        }
+
+        std::string levelId = std::to_string(m_level->m_levelID.value());
+
+        int attempts = Mod::get()->getSavedValue<int>(
+            "goal_" + levelId + "_attempts",
+            0
+        );
+
+        Mod::get()->setSavedValue(
+            "goal_" + levelId + "_attempts",
+            attempts + 1
+        );
 
         this->updateGoalLabel();
     }
 
     void updateGoalLabel() {
-        std::string levelId = Mod::get()->getSavedValue<std::string>("goal-level", "");
-        int goal = Mod::get()->getSavedValue<int>("goal-percent", 0);
-        int attempts = Mod::get()->getSavedValue<int>("goal-attempts", 0);
-
-        if (levelId.empty() || goal <= 0) {
+        if (!m_level) {
             return;
         }
+
+        std::string levelId = std::to_string(m_level->m_levelID.value());
+
+        int target = Mod::get()->getSavedValue<int>(
+            "goal_" + levelId + "_target",
+            0
+        );
+
+        if (target <= 0) {
+            return;
+        }
+
+        int attempts = Mod::get()->getSavedValue<int>(
+            "goal_" + levelId + "_attempts",
+            0
+        );
 
         if (!m_fields->m_goalLabel) {
             m_fields->m_goalLabel = CCLabelBMFont::create("", "bigFont.fnt");
@@ -205,9 +500,8 @@ public:
         }
 
         std::string text = fmt::format(
-            "Level: {}  Goal: {}%  Attempts: {}",
-            levelId,
-            goal,
+            "Goal: {}%  Attempts: {}",
+            target,
             attempts
         );
 
@@ -233,7 +527,7 @@ public:
         }
 
         goalsButton->setPosition({
-            winSize.width - 140.f,
+            winSize.width - 110.f,
             50.f
         });
 
@@ -251,6 +545,6 @@ public:
     }
 
     void onGoals(CCObject*) {
-        GoalPopup::create()->show();
+        GoalListPopup::create()->show();
     }
 };
