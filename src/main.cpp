@@ -1,70 +1,81 @@
 #include <Geode/Geode.hpp>
 #include <Geode/modify/PlayLayer.hpp>
 #include <Geode/modify/PauseLayer.hpp>
-#include <Geode/ui/Popup.hpp>
 #include <Geode/ui/TextInput.hpp>
 #include <Geode/ui/Notification.hpp>
 
 using namespace geode::prelude;
 
-class GoalPopup : public geode::Popup<> {
+class GoalPopup : public FLAlertLayer {
 protected:
     TextInput* m_levelIdInput;
     TextInput* m_goalInput;
 
-    bool setup() override {
-        this->setTitle("Set Goal");
-
-        auto winSize = CCDirector::get()->getWinSize();
+    bool init() {
+        if (!FLAlertLayer::init(
+            260.f,
+            170.f,
+            "GJ_square05.png",
+            "Set Goal",
+            "Cancel"
+        )) {
+            return false;
+        }
 
         auto levelLabel = CCLabelBMFont::create("Level ID", "bigFont.fnt");
-        levelLabel->setScale(0.5f);
-        levelLabel->setPosition({75.f, 115.f});
+        levelLabel->setScale(0.45f);
+        levelLabel->setPosition({130.f, 125.f});
         m_mainLayer->addChild(levelLabel);
 
-        m_levelIdInput = TextInput::create(180.f, 30.f, "Level ID");
-        m_levelIdInput->setPosition({75.f, 90.f});
-        m_levelIdInput->setScale(0.8f);
+        m_levelIdInput = TextInput::create(200.f, "Level ID");
+        m_levelIdInput->setPosition({130.f, 100.f});
         m_mainLayer->addChild(m_levelIdInput);
 
-        auto goalLabel = CCLabelBMFont::create("Goal %", "bigFont.fnt");
-        goalLabel->setScale(0.5f);
-        goalLabel->setPosition({75.f, 55.f});
+        auto goalLabel = CCLabelBMFont::create("Goal Percentage", "bigFont.fnt");
+        goalLabel->setScale(0.45f);
+        goalLabel->setPosition({130.f, 65.f});
         m_mainLayer->addChild(goalLabel);
 
-        m_goalInput = TextInput::create(180.f, 30.f, "Goal %");
-        m_goalInput->setPosition({75.f, 30.f});
-        m_goalInput->setScale(0.8f);
+        m_goalInput = TextInput::create(200.f, "Goal %");
+        m_goalInput->setPosition({130.f, 40.f});
         m_mainLayer->addChild(m_goalInput);
 
-        auto saveBtn = CCMenuItemSpriteExtra::create(
+        auto saveButton = CCMenuItemSpriteExtra::create(
             ButtonSprite::create("Save"),
             this,
             menu_selector(GoalPopup::onSave)
         );
-        saveBtn->setPosition({180.f, 20.f});
+        saveButton->setPosition({190.f, 15.f});
 
         auto menu = CCMenu::create();
-        menu->addChild(saveBtn);
+        menu->addChild(saveButton);
         menu->setPosition({0.f, 0.f});
-        m_mainLayer->addChild(menu);
+        m_buttonMenu->addChild(menu);
 
         return true;
     }
 
     void onSave(CCObject*) {
-        auto levelId = m_levelIdInput->getString();
-        auto goalText = m_goalInput->getString();
+        std::string levelId = m_levelIdInput->getString();
+        std::string goalText = m_goalInput->getString();
 
         if (levelId.empty() || goalText.empty()) {
-            Notification::create("Enter a level ID and goal.", NotificationIcon::Warning, 2.f)->show();
+            Notification::create(
+                "Enter a level ID and goal.",
+                NotificationIcon::Warning,
+                2.f
+            )->show();
             return;
         }
 
         int goal = std::atoi(goalText.c_str());
 
         if (goal < 1 || goal > 100) {
-            Notification::create("Goal must be 1-100%.", NotificationIcon::Warning, 2.f)->show();
+            Notification::create(
+                "Goal must be between 1% and 100%.",
+                NotificationIcon::Warning,
+                2.f
+            )->show();
             return;
         }
 
@@ -72,18 +83,25 @@ protected:
         Mod::get()->setSavedValue("goal-percent", goal);
         Mod::get()->setSavedValue("goal-attempts", 0);
 
-        Notification::create("Goal saved.", NotificationIcon::Success, 2.f)->show();
+        Notification::create(
+            "Goal saved.",
+            NotificationIcon::Success,
+            2.f
+        )->show();
+
         this->onClose(nullptr);
     }
 
 public:
     static GoalPopup* create() {
-        auto ret = new GoalPopup();
-        if (ret->init(240.f, 160.f)) {
-            ret->autorelease();
-            return ret;
+        auto result = new GoalPopup();
+
+        if (result->init()) {
+            result->autorelease();
+            return result;
         }
-        delete ret;
+
+        delete result;
         return nullptr;
     }
 };
@@ -104,21 +122,26 @@ public:
     }
 
     void updateGoalLabel() {
-        auto levelId = Mod::get()->getSavedValue<std::string>("goal-level", "");
+        std::string levelId = Mod::get()->getSavedValue<std::string>("goal-level", "");
         int goal = Mod::get()->getSavedValue<int>("goal-percent", 0);
         int attempts = Mod::get()->getSavedValue<int>("goal-attempts", 0);
 
-        if (levelId.empty() || goal <= 0) return;
+        if (levelId.empty() || goal <= 0) {
+            return;
+        }
 
         if (!m_fields->m_goalLabel) {
             m_fields->m_goalLabel = CCLabelBMFont::create("", "bigFont.fnt");
             m_fields->m_goalLabel->setAnchorPoint({0.5f, 1.f});
             m_fields->m_goalLabel->setScale(0.4f);
             m_fields->m_goalLabel->setZOrder(999);
-            m_fields->m_goalLabel->setID("session-goals-label");
+            m_fields->m_goalLabel->setID("session-goals-label"_spr);
 
             auto winSize = CCDirector::get()->getWinSize();
-            m_fields->m_goalLabel->setPosition({winSize.width / 2.f, winSize.height - 10.f});
+            m_fields->m_goalLabel->setPosition({
+                winSize.width / 2.f,
+                winSize.height - 10.f
+            });
 
             m_uiLayer->addChild(m_fields->m_goalLabel);
         }
@@ -141,16 +164,19 @@ public:
 
         auto winSize = CCDirector::get()->getWinSize();
 
-        auto button = CCMenuItemSpriteExtra::create(
+        auto goalsButton = CCMenuItemSpriteExtra::create(
             ButtonSprite::create("Goals"),
             this,
             menu_selector(GoalsPauseLayer::onGoals)
         );
 
-        button->setPosition({winSize.width / 2.f, winSize.height - 30.f});
+        goalsButton->setPosition({
+            winSize.width / 2.f,
+            winSize.height - 35.f
+        });
 
         auto menu = CCMenu::create();
-        menu->addChild(button);
+        menu->addChild(goalsButton);
         menu->setPosition({0.f, 0.f});
         menu->setZOrder(999);
 
