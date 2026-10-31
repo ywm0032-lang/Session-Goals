@@ -65,7 +65,13 @@ protected:
 
     void setBrownBackground() {
         if (auto background = m_mainLayer->getChildByType<CCScale9Sprite>(0)) {
-            background->setSpriteFrame("GJ_square04.png"_spr);
+            auto brownFrame = CCSpriteFrameCache::get()->spriteFrameByName(
+                "GJ_square04.png"
+            );
+
+            if (brownFrame) {
+                background->setSpriteFrame(brownFrame);
+            }
         }
     }
 
