@@ -324,13 +324,19 @@ protected:
         auto ids = getGoalIds();
 
         if (ids.empty()) {
-            auto emptyLabel = CCLabelBMFont::create("No goals yet.
-Tap + to add one.", "bigFont.fnt");
+            auto emptyLabel1 = CCLabelBMFont::create("No goals yet.", "bigFont.fnt");
+            auto emptyLabel2 = CCLabelBMFont::create("Tap + to add one.", "bigFont.fnt");
 
-            if (emptyLabel) {
-                emptyLabel->setScale(0.45f);
-                emptyLabel->setPosition({140.f, 75.f});
-                m_scrollLayer->m_contentLayer->addChild(emptyLabel);
+            if (emptyLabel1) {
+                emptyLabel1->setScale(0.45f);
+                emptyLabel1->setPosition({140.f, 90.f});
+                m_scrollLayer->m_contentLayer->addChild(emptyLabel1);
+            }
+
+            if (emptyLabel2) {
+                emptyLabel2->setScale(0.45f);
+                emptyLabel2->setPosition({140.f, 60.f});
+                m_scrollLayer->m_contentLayer->addChild(emptyLabel2);
             }
 
             m_scrollLayer->m_contentLayer->setContentHeight(150.f);
@@ -359,18 +365,25 @@ Tap + to add one.", "bigFont.fnt");
                 ? "Completed"
                 : "Best: " + std::to_string(best) + "%";
 
-            std::string text = fmt::format("Level {}
-Goal: {}%  {}", id, target, status);
+            std::string line1 = "Level " + id;
+            std::string line2 = "Goal: " + std::to_string(target) + "% | " + status;
 
-            auto label = CCLabelBMFont::create(text.c_str(), "bigFont.fnt");
+            auto label1 = CCLabelBMFont::create(line1.c_str(), "bigFont.fnt");
+            auto label2 = CCLabelBMFont::create(line2.c_str(), "bigFont.fnt");
 
-            if (label) {
-                label->setScale(0.4f);
-                label->setPosition({140.f, y});
-                m_scrollLayer->m_contentLayer->addChild(label);
+            if (label1) {
+                label1->setScale(0.4f);
+                label1->setPosition({140.f, y + 12.f});
+                m_scrollLayer->m_contentLayer->addChild(label1);
             }
 
-            y += 50.f;
+            if (label2) {
+                label2->setScale(0.4f);
+                label2->setPosition({140.f, y - 12.f});
+                m_scrollLayer->m_contentLayer->addChild(label2);
+            }
+
+            y += 55.f;
         }
 
         m_scrollLayer->m_contentLayer->setContentHeight(y);
@@ -467,11 +480,7 @@ public:
             m_uiLayer->addChild(m_fields->m_goalLabel);
         }
 
-        std::string text = fmt::format(
-            "Goal: {}%  Attempts: {}",
-            target,
-            attempts
-        );
+        std::string text = "Goal: " + std::to_string(target) + "% | Attempts: " + std::to_string(attempts);
 
         m_fields->m_goalLabel->setString(text.c_str());
     }
