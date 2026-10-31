@@ -9,7 +9,7 @@ file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS src/*.cpp)
 
 add_library(${PROJECT_NAME} SHARED ${SOURCES})
 
-if (NOT DEFINED ENVIRONMENT_GEODE_SDK)
+if (NOT DEFINED ENV{GEODE_SDK})
     message(FATAL_ERROR "Unable to find Geode SDK! Please install it and set the GEODE_SDK environment variable.")
 else()
     message(STATUS "Found Geode: $ENV{GEODE_SDK}")
