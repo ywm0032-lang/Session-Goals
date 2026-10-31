@@ -6,7 +6,7 @@
         "developer": },
         "description": "Set percentage goals for levels and track your progress live.",
         "repository": "https://github.com/yourname/Session-Goals",
-        "dependencies": []
+        "dependencies": {}
     },
     "build": {
         "paths": {
