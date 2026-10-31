@@ -13,11 +13,15 @@ protected:
 
     bool init() {
         if (!FLAlertLayer::init(
-            260.f,
-            170.f,
-            "GJ_square05.png",
+            this,
             "Set Goal",
-            "Cancel"
+            "",
+            "Cancel",
+            "",
+            260.f,
+            false,
+            170.f,
+            1.f
         )) {
             return false;
         }
@@ -89,7 +93,7 @@ protected:
             2.f
         )->show();
 
-        this->onClose(nullptr);
+        this->onBtn1(nullptr);
     }
 
 public:
