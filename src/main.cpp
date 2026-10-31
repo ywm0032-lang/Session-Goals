@@ -8,8 +8,8 @@ using namespace geode::prelude;
 
 class GoalPopup : public FLAlertLayer, public FLAlertLayerProtocol {
 protected:
-    TextInput* m_levelIdInput;
-    TextInput* m_goalInput;
+    TextInput* m_levelIdInput = nullptr;
+    TextInput* m_goalInput = nullptr;
 
     bool init() {
         if (!FLAlertLayer::init(
@@ -18,64 +18,94 @@ protected:
             "",
             "Cancel",
             "",
-            320.f,
+            340.f,
             false,
-            230.f,
+            250.f,
             1.f
         )) {
             return false;
         }
 
+        if (!m_mainLayer || !m_buttonMenu) {
+            return false;
+        }
+
         this->setBrownBackground();
 
-        float centerX = 160.f;
+        float centerX = 170.f;
+        float centerY = 125.f;
 
         auto levelLabel = CCLabelBMFont::create("Level ID", "bigFont.fnt");
-        levelLabel->setScale(0.5f);
-        levelLabel->setPosition({centerX, 175.f});
-        m_mainLayer->addChild(levelLabel);
+        if (levelLabel) {
+            levelLabel->setScale(0.5f);
+            levelLabel->setPosition({centerX, centerY + 55.f});
+            m_mainLayer->addChild(levelLabel);
+        }
 
-        m_levelIdInput = TextInput::create(220.f, "Level ID");
-        m_levelIdInput->setPosition({centerX, 145.f});
-        m_mainLayer->addChild(m_levelIdInput);
+        m_levelIdInput = TextInput::create(240.f, "Level ID");
+        if (m_levelIdInput) {
+            m_levelIdInput->setPosition({centerX, centerY + 25.f});
+            m_mainLayer->addChild(m_levelIdInput);
+        }
 
         auto goalLabel = CCLabelBMFont::create("Goal Percentage", "bigFont.fnt");
-        goalLabel->setScale(0.5f);
-        goalLabel->setPosition({centerX, 100.f});
-        m_mainLayer->addChild(goalLabel);
+        if (goalLabel) {
+            goalLabel->setScale(0.5f);
+            goalLabel->setPosition({centerX, centerY - 20.f});
+            m_mainLayer->addChild(goalLabel);
+        }
 
-        m_goalInput = TextInput::create(220.f, "Goal %");
-        m_goalInput->setPosition({centerX, 70.f});
-        m_mainLayer->addChild(m_goalInput);
+        m_goalInput = TextInput::create(240.f, "Goal %");
+        if (m_goalInput) {
+            m_goalInput->setPosition({centerX, centerY - 50.f});
+            m_mainLayer->addChild(m_goalInput);
+        }
 
         auto saveButton = CCMenuItemSpriteExtra::create(
             ButtonSprite::create("Save"),
             this,
             menu_selector(GoalPopup::onSave)
         );
-        saveButton->setPosition({centerX, 25.f});
 
-        auto menu = CCMenu::create();
-        menu->addChild(saveButton);
-        menu->setPosition({0.f, 0.f});
-        m_buttonMenu->addChild(menu);
+        if (saveButton) {
+            saveButton->setPosition({centerX, centerY - 95.f});
+
+            auto menu = CCMenu::create();
+            if (menu) {
+                menu->addChild(saveButton);
+                menu->setPosition({0.f, 0.f});
+                m_buttonMenu->addChild(menu);
+            }
+        }
 
         return true;
     }
 
     void setBrownBackground() {
-        if (auto background = m_mainLayer->getChildByType<CCScale9Sprite>(0)) {
-            auto brownFrame = CCSpriteFrameCache::get()->spriteFrameByName(
-                "GJ_square04.png"
-            );
+        auto oldBackground = m_mainLayer->getChildByType<CCScale9Sprite>(0);
 
-            if (brownFrame) {
-                background->setSpriteFrame(brownFrame);
-            }
+        auto brownBackground = CCScale9Sprite::create("GJ_square04.png");
+
+        if (!brownBackground) {
+            return;
+        }
+
+        brownBackground->setContentSize({320.f, 230.f});
+        brownBackground->setPosition({170.f, 125.f});
+        brownBackground->setZOrder(-1);
+
+        m_mainLayer->addChild(brownBackground);
+
+        if (oldBackground) {
+            oldBackground->removeFromParent();
         }
     }
 
     void onSave(CCObject*) {
+        if (!m_levelIdInput || !m_goalInput) {
+            return;
+        }
+
         std::string levelId = m_levelIdInput->getString();
         std::string goalText = m_goalInput->getString();
 
@@ -116,12 +146,15 @@ public:
     static GoalPopup* create() {
         auto result = new GoalPopup();
 
-        if (result->init()) {
+        if (result && result->init()) {
             result->autorelease();
             return result;
         }
 
-        delete result;
+        if (result) {
+            delete result;
+        }
+
         return nullptr;
     }
 };
@@ -152,6 +185,11 @@ public:
 
         if (!m_fields->m_goalLabel) {
             m_fields->m_goalLabel = CCLabelBMFont::create("", "bigFont.fnt");
+
+            if (!m_fields->m_goalLabel || !m_uiLayer) {
+                return;
+            }
+
             m_fields->m_goalLabel->setAnchorPoint({0.5f, 1.f});
             m_fields->m_goalLabel->setScale(0.4f);
             m_fields->m_goalLabel->setZOrder(999);
@@ -190,12 +228,21 @@ public:
             menu_selector(GoalsPauseLayer::onGoals)
         );
 
+        if (!goalsButton) {
+            return;
+        }
+
         goalsButton->setPosition({
-            winSize.width / 2.f + 115.f,
+            winSize.width - 140.f,
             50.f
         });
 
         auto menu = CCMenu::create();
+
+        if (!menu) {
+            return;
+        }
+
         menu->addChild(goalsButton);
         menu->setPosition({0.f, 0.f});
         menu->setZOrder(999);
