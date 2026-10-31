@@ -18,30 +18,34 @@ protected:
             "",
             "Cancel",
             "",
-            260.f,
+            320.f,
             false,
-            170.f,
+            230.f,
             1.f
         )) {
             return false;
         }
 
+        this->setBrownBackground();
+
+        float centerX = 160.f;
+
         auto levelLabel = CCLabelBMFont::create("Level ID", "bigFont.fnt");
-        levelLabel->setScale(0.45f);
-        levelLabel->setPosition({130.f, 125.f});
+        levelLabel->setScale(0.5f);
+        levelLabel->setPosition({centerX, 175.f});
         m_mainLayer->addChild(levelLabel);
 
-        m_levelIdInput = TextInput::create(200.f, "Level ID");
-        m_levelIdInput->setPosition({130.f, 100.f});
+        m_levelIdInput = TextInput::create(220.f, "Level ID");
+        m_levelIdInput->setPosition({centerX, 145.f});
         m_mainLayer->addChild(m_levelIdInput);
 
         auto goalLabel = CCLabelBMFont::create("Goal Percentage", "bigFont.fnt");
-        goalLabel->setScale(0.45f);
-        goalLabel->setPosition({130.f, 65.f});
+        goalLabel->setScale(0.5f);
+        goalLabel->setPosition({centerX, 100.f});
         m_mainLayer->addChild(goalLabel);
 
-        m_goalInput = TextInput::create(200.f, "Goal %");
-        m_goalInput->setPosition({130.f, 40.f});
+        m_goalInput = TextInput::create(220.f, "Goal %");
+        m_goalInput->setPosition({centerX, 70.f});
         m_mainLayer->addChild(m_goalInput);
 
         auto saveButton = CCMenuItemSpriteExtra::create(
@@ -49,7 +53,7 @@ protected:
             this,
             menu_selector(GoalPopup::onSave)
         );
-        saveButton->setPosition({190.f, 15.f});
+        saveButton->setPosition({centerX, 25.f});
 
         auto menu = CCMenu::create();
         menu->addChild(saveButton);
@@ -57,6 +61,19 @@ protected:
         m_buttonMenu->addChild(menu);
 
         return true;
+    }
+
+    void setBrownBackground() {
+        for (int i = 0; i < m_mainLayer->getChildrenCount(); i++) {
+            auto child = typeinfo_pointer_cast<CCScale9Sprite>(
+                m_mainLayer->getChildren()->objectAtIndex(i)
+            );
+
+            if (child) {
+                child->setSpriteFrame("GJ_square04.png"_spr);
+                break;
+            }
+        }
     }
 
     void onSave(CCObject*) {
@@ -175,8 +192,8 @@ public:
         );
 
         goalsButton->setPosition({
-            winSize.width / 2.f,
-            winSize.height - 35.f
+            winSize.width / 2.f + 115.f,
+            50.f
         });
 
         auto menu = CCMenu::create();
