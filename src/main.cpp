@@ -64,15 +64,8 @@ protected:
     }
 
     void setBrownBackground() {
-        for (int i = 0; i < m_mainLayer->getChildrenCount(); i++) {
-            auto child = typeinfo_pointer_cast<CCScale9Sprite>(
-                m_mainLayer->getChildren()->objectAtIndex(i)
-            );
-
-            if (child) {
-                child->setSpriteFrame("GJ_square04.png"_spr);
-                break;
-            }
+        if (auto background = m_mainLayer->getChildByType<CCScale9Sprite>(0)) {
+            background->setSpriteFrame("GJ_square04.png"_spr);
         }
     }
 
