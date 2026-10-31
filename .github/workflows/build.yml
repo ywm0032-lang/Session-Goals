@@ -1,4 +1,4 @@
-name: Build Session Goals
+name: Build Geode Mod
 
 on:
   push:
@@ -8,22 +8,17 @@ on:
 
 jobs:
   build:
-    strategy:
-      matrix:
-        target:
-          - Android64
-          - Win64
-
-    runs-on: ${{ matrix.target == 'Android64' && 'ubuntu-latest' || 'windows-latest' }}
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Build Geode Mod
+      - name: Build Android 64-bit
+        id: build
         uses: geode-sdk/build-geode-mod@main
         with:
-          target: ${{ matrix.target }}
+          target: Android64
           sdk: given
           cli: latest
           build-config: Release
@@ -31,3 +26,11 @@ jobs:
           combine: false
           bindings: geode-sdk/bindings
           android-min-sdk: 23
+
+      - name: Upload Android 64-bit artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Session-Goals-Android64
+          path: ${{ steps.build.outputs.build-output }}
+          if-no-files-found: error
+          retention-days: 30
