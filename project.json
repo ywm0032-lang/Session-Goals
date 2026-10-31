@@ -1,0 +1,17 @@
+{
+    "project": {
+        "name": "SessionGoals",
+        "id": "yourname.session-goals",
+        "version": "1.0.0",
+        "developer": },
+        "description": "Set percentage goals for levels and track your progress live.",
+        "repository": "https://github.com/yourname/Session-Goals",
+        "dependencies": []
+    },
+    "build": {
+        "paths": {
+            "sources": ["src/**/*"],
+            "headers": ["src/**/*"],
+            "include": []
+        }
+    }
